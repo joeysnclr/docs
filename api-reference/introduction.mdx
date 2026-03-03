@@ -1,33 +1,68 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: "Introduction"
+description: "Cross-exchange prediction market data via a single API."
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+The Surface API gives you programmatic access to Surface's cross-exchange matching system. Look up any Kalshi contract ticker or Polymarket token ID and get the matched contract on the other exchange, a confidence score, and direct links to both markets.
 
-## Welcome
+## Base URL
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
-
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+```
+https://surface.surf/api/v1
+```
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+All requests require an API key in the `X-API-Key` header.
+
+```bash
+curl https://surface.surf/api/v1/match/KXNBAGAME-26FEB28LACLAL-LAL \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+To get a key, reach out at [surface.surf](https://surface.surf).
+
+## Rate limits
+
+The free tier allows **25 new unique contract lookups per day**.
+
+**Repeat lookups are always free.** Looking up the same `contractID` again — with the same key — never counts against your quota.
+
+**404s are also free.** If no match is found for a contract, that request does not consume a quota slot.
+
+Quota resets at **midnight UTC** each day. Two response headers are present on every request:
+
+| Header | Description |
+|---|---|
+| `X-Match-Limit-Remaining` | New unique matches remaining today |
+| `X-Match-Limit-Reset` | RFC3339 UTC timestamp of the next reset |
+
+## Errors
+
+All errors use the same envelope:
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+{
+  "error": "unauthorized",
+  "message": "Invalid or revoked API key."
+}
 ```
+
+On a `429`, three additional fields are included:
+
+```json
+{
+  "error": "daily_limit_reached",
+  "message": "Free tier limit of 25 new matches per day reached. Resets at midnight UTC.",
+  "limit": 25,
+  "used": 25,
+  "resets_at": "2026-03-03T00:00:00Z"
+}
+```
+
+| Status | `error` code | When |
+|---|---|---|
+| `401` | `unauthorized` | Missing, invalid, or revoked API key |
+| `404` | `no_match` | No cross-exchange match found |
+| `429` | `daily_limit_reached` | Free tier quota exhausted |
+| `500` | `internal_error` | Unexpected server error |

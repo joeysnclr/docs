@@ -1,97 +1,50 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Surface API"
+description: "Bidirectional contract matching between Kalshi and Polymarket."
 ---
 
-## Setting up
+The Surface API lets you look up any Kalshi contract ticker or Polymarket token ID and get the matched contract on the other exchange — along with a confidence score, direct links, and resolution rules.
 
-Get your documentation site up and running in minutes.
+One endpoint. Works in both directions.
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Make your first request in under a minute.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="API Reference" icon="code" href="/api-reference/introduction">
+    Full endpoint reference with interactive playground.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## How it works
 
-Everything you need to create world-class documentation.
+Surface maintains a continuously updated dataset of matched contracts across Kalshi and Polymarket. Each match is scored by an LLM-powered matching engine — only matches above a **0.95 confidence threshold** are returned.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+When you call `/match/{contractID}`, Surface resolves the input against this dataset and returns both sides of the pair.
 
-## Need inspiration?
+```bash
+curl https://surface.surf/api/v1/match/KXNBAGAME-26MAR02BOSMIL-BOS \
+  -H "X-API-Key: YOUR_API_KEY"
+```
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+```json
+{
+  "source": {
+    "id": "KXNBAGAME-26MAR02BOSMIL-BOS",
+    "exchange": "kalshi",
+    "question": "Boston at Milwaukee Winner?",
+    "url": "https://kalshi.com/markets/kxnbagame/kxnbagame-26mar02bosmil-bos"
+  },
+  "match": {
+    "id": "98313749371896366519276790684273691434395213253249717099152745374401893722",
+    "exchange": "polymarket",
+    "question": "Celtics vs. Bucks",
+    "url": "https://polymarket.com/event/celtics-vs-bucks"
+  },
+  "confidence": 0.99
+}
+```
+
+## Coverage
+
+Surface currently covers NBA, NFL, and other major prediction markets. Coverage expands as new contracts are ingested and matched.

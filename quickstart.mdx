@@ -1,80 +1,82 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Make your first match request in under a minute."
 ---
 
-## Get started in three steps
+## 1. Get an API key
 
-Get your documentation site running locally and make your first customization.
+Reach out at [surface.surf](https://surface.surf) to request access. You'll receive a key in the format `surf_...`.
 
-### Step 1: Set up your local environment
+## 2. Make a request
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+Pass your key in the `X-API-Key` header. You can look up either a Kalshi ticker or a Polymarket token ID.
 
-### Step 2: Deploy your changes
+<CodeGroup>
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+```bash cURL
+curl https://surface.surf/api/v1/match/KXNBAGAME-26MAR02BOSMIL-BOS \
+  -H "X-API-Key: YOUR_API_KEY"
+```
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+```python Python
+import requests
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+response = requests.get(
+    "https://surface.surf/api/v1/match/KXNBAGAME-26MAR02BOSMIL-BOS",
+    headers={"X-API-Key": "YOUR_API_KEY"},
+)
+print(response.json())
+```
 
-### Step 3: Go live
+```javascript JavaScript
+const response = await fetch(
+  "https://surface.surf/api/v1/match/KXNBAGAME-26MAR02BOSMIL-BOS",
+  { headers: { "X-API-Key": "YOUR_API_KEY" } }
+);
+const data = await response.json();
+console.log(data);
+```
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+</CodeGroup>
 
-## Next steps
+## 3. Read the response
 
-Now that you have your docs running, explore these key features:
+```json
+{
+  "source": {
+    "id": "KXNBAGAME-26MAR02BOSMIL-BOS",
+    "exchange": "kalshi",
+    "question": "Boston at Milwaukee Winner?",
+    "url": "https://kalshi.com/markets/kxnbagame/kxnbagame-26mar02bosmil-bos"
+  },
+  "match": {
+    "id": "98313749371896366519276790684273691434395213253249717099152745374401893722",
+    "exchange": "polymarket",
+    "question": "Celtics vs. Bucks",
+    "url": "https://polymarket.com/event/celtics-vs-bucks"
+  },
+  "confidence": 0.99
+}
+```
 
-<CardGroup cols={2}>
+`source` is the contract you queried. `match` is its cross-exchange counterpart. `confidence` is the match score — Surface only returns matches above **0.95**.
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
+## It also works in reverse
 
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
+Pass the Polymarket token ID to get the Kalshi side:
 
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
+```bash
+curl https://surface.surf/api/v1/match/98313749371896366519276790684273691434395213253249717099152745374401893722 \
+  -H "X-API-Key: YOUR_API_KEY"
+```
 
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
+## Check your quota
 
-</CardGroup>
+Every response includes two headers:
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+| Header | Value |
+|---|---|
+| `X-Match-Limit-Remaining` | New unique matches remaining today |
+| `X-Match-Limit-Reset` | Next reset (midnight UTC, RFC3339) |
+
+Repeat lookups of the same contract are always free and don't appear in these counts. See [Introduction](/api-reference/introduction#rate-limits) for full quota rules.

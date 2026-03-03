@@ -1,216 +1,277 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
-    "license": {
-      "name": "MIT"
-    },
+    "title": "Surface API",
+    "description": "Cross-exchange prediction market data. Bidirectional contract matching between Kalshi and Polymarket.",
     "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
+      "url": "https://surface.surf/api/v1",
+      "description": "Production"
     }
   ],
   "security": [
     {
-      "bearerAuth": []
+      "apiKey": []
     }
   ],
   "paths": {
-    "/plants": {
+    "/match/{contractID}": {
       "get": {
-        "description": "Returns all plants from the system that the user has access to",
+        "summary": "Match a contract",
+        "description": "Bidirectional cross-exchange contract lookup. Given a Kalshi ticker or a Polymarket token ID, returns the matched contract on the other exchange along with a confidence score.\n\nA match lookup is only counted against your daily quota if it is a **new** unique contract — repeated lookups of the same contract ID are always free.",
+        "operationId": "matchContract",
+        "tags": ["Contracts"],
         "parameters": [
           {
-            "name": "limit",
-            "in": "query",
-            "description": "The maximum number of results to return",
+            "name": "contractID",
+            "in": "path",
+            "required": true,
+            "description": "A Kalshi contract ticker (e.g. `KXNBAGAME-26FEB28LACLAL-LAL`) or a Polymarket token ID (hex string).",
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "type": "string"
+            },
+            "examples": {
+              "kalshi": {
+                "summary": "Kalshi ticker",
+                "value": "KXNBAGAME-26FEB28LACLAL-LAL"
+              },
+              "polymarket": {
+                "summary": "Polymarket token ID",
+                "value": "0x1234abcd..."
+              }
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Plant response",
+            "description": "Match found.",
+            "headers": {
+              "X-Match-Limit-Remaining": {
+                "description": "Number of new unique match lookups remaining today.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Match-Limit-Reset": {
+                "description": "RFC3339 UTC timestamp of the next quota reset (midnight UTC).",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
+                  "$ref": "#/components/schemas/MatchResponse"
+                },
+                "example": {
+                  "source": {
+                    "id": "KXNBAGAME-26FEB28LACLAL-LAL",
+                    "exchange": "kalshi",
+                    "question": "Will the Lakers beat the Clippers on Feb 28?",
+                    "url": "https://kalshi.com/markets/kxnbagame/lal-vs-lac-lal-wins",
+                    "rules": "This market resolves YES if the Los Angeles Lakers defeat the Los Angeles Clippers..."
+                  },
+                  "match": {
+                    "id": "0x9f2d...",
+                    "exchange": "polymarket",
+                    "question": "Lakers vs Clippers — Lakers win?",
+                    "url": "https://polymarket.com/event/lakers-vs-clippers-feb-28"
+                  },
+                  "confidence": 0.97
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "missing": {
+                    "summary": "No key provided",
+                    "value": {
+                      "error": "unauthorized",
+                      "message": "Missing API key. Include your key in the X-API-Key header."
+                    }
+                  },
+                  "invalid": {
+                    "summary": "Invalid or revoked key",
+                    "value": {
+                      "error": "unauthorized",
+                      "message": "Invalid or revoked API key."
+                    }
                   }
                 }
               }
             }
           },
-          "400": {
-            "description": "Unexpected error",
+          "404": {
+            "description": "No cross-exchange match found for this contract. Does not count against your quota.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "description": "Creates a new plant in the store",
-        "requestBody": {
-          "description": "Plant to add to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "plant response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Plant"
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "no_match",
+                  "message": "No cross-exchange match found for this contract."
                 }
               }
             }
           },
-          "400": {
-            "description": "unexpected error",
+          "429": {
+            "description": "Daily quota exhausted.",
+            "headers": {
+              "X-Match-Limit-Remaining": {
+                "description": "Will be 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Match-Limit-Reset": {
+                "description": "RFC3339 UTC timestamp of the next quota reset.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/QuotaErrorResponse"
+                },
+                "example": {
+                  "error": "daily_limit_reached",
+                  "message": "Free tier limit of 25 new matches per day reached. Resets at midnight UTC.",
+                  "limit": 25,
+                  "used": 25,
+                  "resets_at": "2026-03-03T00:00:00Z"
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "ID of plant to delete",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
           },
-          "400": {
-            "description": "unexpected error",
+          "500": {
+            "description": "Internal server error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "internal_error",
+                  "message": "An unexpected error occurred."
                 }
               }
             }
-          }
-        }
-      }
-    }
-  },
-  "webhooks": {
-    "/plant/webhook": {
-      "post": {
-        "description": "Information about a new plant added to the store",
-        "requestBody": {
-          "description": "Plant added to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
           }
         }
       }
     }
   },
   "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    },
     "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
+      "Contract": {
         "type": "object",
+        "required": ["id", "exchange", "question", "url"],
         "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
+          "id": {
+            "type": "string",
+            "description": "The contract identifier on its exchange. A Kalshi ticker or Polymarket token ID."
           },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
+          "exchange": {
+            "type": "string",
+            "enum": ["kalshi", "polymarket"],
+            "description": "The exchange this contract belongs to."
+          },
+          "question": {
+            "type": "string",
+            "description": "The market question as displayed on the exchange."
+          },
+          "url": {
+            "type": "string",
+            "description": "Direct link to the contract on its exchange."
+          },
+          "rules": {
+            "type": "string",
+            "description": "Resolution rules for the contract. Omitted if not available."
           }
         }
       },
-      "NewPlant": {
+      "MatchResponse": {
+        "type": "object",
+        "required": ["source", "match", "confidence"],
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/Contract",
+            "description": "The contract you queried. Exchange is determined by the format of `contractID`."
+          },
+          "match": {
+            "$ref": "#/components/schemas/Contract",
+            "description": "The matched contract on the other exchange."
+          },
+          "confidence": {
+            "type": "number",
+            "format": "float",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Match confidence score between 0 and 1. Scores above 0.9 are considered high-confidence."
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error", "message"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Machine-readable error code."
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable description of the error."
+          }
+        }
+      },
+      "QuotaErrorResponse": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/Plant"
+            "$ref": "#/components/schemas/ErrorResponse"
           },
           {
-            "required": [
-              "id"
-            ],
             "type": "object",
+            "required": ["limit", "used", "resets_at"],
             "properties": {
-              "id": {
-                "description": "Identification number of the plant",
+              "limit": {
                 "type": "integer",
-                "format": "int64"
+                "description": "Your daily quota for new unique match lookups."
+              },
+              "used": {
+                "type": "integer",
+                "description": "Number of new unique matches used today."
+              },
+              "resets_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "RFC3339 UTC timestamp of the next quota reset (midnight UTC)."
               }
             }
           }
         ]
-      },
-      "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "message": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
       }
     }
   }
