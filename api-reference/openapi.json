@@ -20,7 +20,7 @@
     "/match/{contractID}": {
       "get": {
         "summary": "Match a contract",
-        "description": "Bidirectional cross-exchange contract lookup. Given a Kalshi ticker or a Polymarket token ID, returns the matched contract on the other exchange along with a confidence score.\n\nA match lookup is only counted against your daily quota if it is a **new** unique contract — repeated lookups of the same contract ID are always free.",
+        "description": "Bidirectional cross-exchange contract lookup. Given any contract ID — a Kalshi ticker or a Polymarket contract ID — returns the full cluster: every contract in the same cross-exchange group and the relationships between them.\n\nThe response is identical regardless of which contract ID in the cluster you query. A match lookup is only counted against your daily quota if it is a **new** cluster — repeated lookups of any ID within the same cluster are always free.",
         "operationId": "matchContract",
         "tags": ["Contracts"],
         "parameters": [
@@ -28,28 +28,28 @@
             "name": "contractID",
             "in": "path",
             "required": true,
-            "description": "A Kalshi contract ticker (e.g. `KXNBAGAME-26FEB28LACLAL-LAL`) or a Polymarket token ID (hex string).",
+            "description": "Any Kalshi contract ticker or Polymarket contract ID.",
             "schema": {
               "type": "string"
             },
             "examples": {
               "kalshi": {
                 "summary": "Kalshi ticker",
-                "value": "KXNBAGAME-26FEB28LACLAL-LAL"
+                "value": "KXNBAGAME-26MAR07LACMEM-LAC"
               },
               "polymarket": {
-                "summary": "Polymarket token ID",
-                "value": "0x1234abcd..."
+                "summary": "Polymarket contract ID",
+                "value": "nba-lac-mem-2026-03-07"
               }
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Match found.",
+            "description": "Cluster found.",
             "headers": {
               "X-Match-Limit-Remaining": {
-                "description": "Number of new unique match lookups remaining today.",
+                "description": "Number of new unique cluster lookups remaining today.",
                 "schema": {
                   "type": "integer"
                 }
@@ -65,23 +65,50 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MatchResponse"
+                  "$ref": "#/components/schemas/ClusterResponse"
                 },
                 "example": {
-                  "source": {
-                    "id": "KXNBAGAME-26FEB28LACLAL-LAL",
-                    "exchange": "kalshi",
-                    "question": "Will the Lakers beat the Clippers on Feb 28?",
-                    "url": "https://kalshi.com/markets/kxnbagame/lal-vs-lac-lal-wins",
-                    "rules": "This market resolves YES if the Los Angeles Lakers defeat the Los Angeles Clippers..."
-                  },
-                  "match": {
-                    "id": "0x9f2d...",
-                    "exchange": "polymarket",
-                    "question": "Lakers vs Clippers — Lakers win?",
-                    "url": "https://polymarket.com/event/lakers-vs-clippers-feb-28"
-                  },
-                  "confidence": 0.97
+                  "contracts": [
+                    {
+                      "id": "KXNBAGAME-26MAR07LACMEM-LAC",
+                      "parent_market_id": "KXNBAGAME-26MAR07LACMEM",
+                      "exchange": "kalshi",
+                      "question": "Los Angeles C at Memphis Winner?",
+                      "yes_name": "Los Angeles C",
+                      "no_name": "Memphis",
+                      "rules": "If Los Angeles C wins the game originally scheduled for Mar 7, 2026, this market resolves Yes."
+                    },
+                    {
+                      "id": "KXNBAGAME-26MAR07LACMEM-MEM",
+                      "parent_market_id": "KXNBAGAME-26MAR07LACMEM",
+                      "exchange": "kalshi",
+                      "question": "Los Angeles C at Memphis Winner?",
+                      "yes_name": "Memphis",
+                      "no_name": "Los Angeles C",
+                      "rules": "If Memphis wins the game originally scheduled for Mar 7, 2026, this market resolves Yes."
+                    },
+                    {
+                      "id": "nba-lac-mem-2026-03-07",
+                      "parent_market_id": "nba-lac-mem-2026-03-07",
+                      "exchange": "polymarket",
+                      "question": "Clippers vs. Grizzlies",
+                      "yes_name": "Clippers",
+                      "no_name": "Grizzlies",
+                      "rules": "If the Clippers win, resolves Clippers. If the Grizzlies win, resolves Grizzlies."
+                    }
+                  ],
+                  "relationships": [
+                    {
+                      "from": "KXNBAGAME-26MAR07LACMEM-LAC",
+                      "to": "nba-lac-mem-2026-03-07",
+                      "is_inverse": false
+                    },
+                    {
+                      "from": "KXNBAGAME-26MAR07LACMEM-MEM",
+                      "to": "nba-lac-mem-2026-03-07",
+                      "is_inverse": true
+                    }
+                  ]
                 }
               }
             }
@@ -187,11 +214,15 @@
     "schemas": {
       "Contract": {
         "type": "object",
-        "required": ["id", "exchange", "question", "url"],
+        "required": ["id", "exchange", "question"],
         "properties": {
           "id": {
             "type": "string",
-            "description": "The contract identifier on its exchange. A Kalshi ticker or Polymarket token ID."
+            "description": "The contract identifier on its exchange."
+          },
+          "parent_market_id": {
+            "type": "string",
+            "description": "The parent market or event ID. For Kalshi this is the series+date portion; for Polymarket it is the event slug."
           },
           "exchange": {
             "type": "string",
@@ -202,9 +233,13 @@
             "type": "string",
             "description": "The market question as displayed on the exchange."
           },
-          "url": {
+          "yes_name": {
             "type": "string",
-            "description": "Direct link to the contract on its exchange."
+            "description": "Label for the YES outcome (e.g. the team name on a Kalshi moneyline)."
+          },
+          "no_name": {
+            "type": "string",
+            "description": "Label for the NO outcome."
           },
           "rules": {
             "type": "string",
@@ -212,24 +247,41 @@
           }
         }
       },
-      "MatchResponse": {
+      "Relationship": {
         "type": "object",
-        "required": ["source", "match", "confidence"],
+        "required": ["from", "to", "is_inverse"],
         "properties": {
-          "source": {
-            "$ref": "#/components/schemas/Contract",
-            "description": "The contract you queried. Exchange is determined by the format of `contractID`."
+          "from": {
+            "type": "string",
+            "description": "Kalshi contract ID."
           },
-          "match": {
-            "$ref": "#/components/schemas/Contract",
-            "description": "The matched contract on the other exchange."
+          "to": {
+            "type": "string",
+            "description": "Polymarket contract ID."
           },
-          "confidence": {
-            "type": "number",
-            "format": "float",
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Match confidence score between 0 and 1. Scores above 0.9 are considered high-confidence."
+          "is_inverse": {
+            "type": "boolean",
+            "description": "When true, YES on the Kalshi contract is equivalent to NO on the Polymarket contract. Invert prices and sides accordingly."
+          }
+        }
+      },
+      "ClusterResponse": {
+        "type": "object",
+        "required": ["contracts", "relationships"],
+        "properties": {
+          "contracts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Contract"
+            },
+            "description": "All contracts in this cross-exchange group. Includes all Kalshi contracts and the Polymarket contract they map to."
+          },
+          "relationships": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Relationship"
+            },
+            "description": "Directed edges from each Kalshi contract to the Polymarket contract, with inversion flag and confidence."
           }
         }
       },
@@ -258,11 +310,11 @@
             "properties": {
               "limit": {
                 "type": "integer",
-                "description": "Your daily quota for new unique match lookups."
+                "description": "Your daily quota for new unique cluster lookups."
               },
               "used": {
                 "type": "integer",
-                "description": "Number of new unique matches used today."
+                "description": "Number of new unique clusters accessed today."
               },
               "resets_at": {
                 "type": "string",

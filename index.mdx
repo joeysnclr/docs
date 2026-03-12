@@ -1,11 +1,11 @@
 ---
 title: "Surface API"
-description: "Bidirectional contract matching between Kalshi and Polymarket."
+description: "Cross-exchange contract matching between Kalshi and Polymarket."
 ---
 
-The Surface API lets you look up any Kalshi contract ticker or Polymarket token ID and get the matched contract on the other exchange — along with a confidence score, direct links, and resolution rules.
+The Surface API lets you look up any Kalshi contract ticker or Polymarket contract ID and get the full cross-exchange cluster — every contract in the same group, their resolution rules, and the relationships between them.
 
-One endpoint. Works in both directions.
+One endpoint. Works in any direction.
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="bolt" href="/quickstart">
@@ -18,30 +18,47 @@ One endpoint. Works in both directions.
 
 ## How it works
 
-Surface maintains a continuously updated dataset of matched contracts across Kalshi and Polymarket. Each match is scored by an LLM-powered matching engine — only matches above a **0.95 confidence threshold** are returned.
+Surface maintains a continuously updated dataset of matched contracts across Kalshi and Polymarket. Each match is scored by an LLM-powered matching engine and human-verified before being returned.
 
-When you call `/match/{contractID}`, Surface resolves the input against this dataset and returns both sides of the pair.
+When you call `/match/{contractID}`, Surface resolves the input and returns the full cluster: all contracts in the same cross-exchange group and the relationships between them. The response is identical regardless of which contract ID you query.
 
 ```bash
-curl https://surface.surf/api/v1/match/KXNBAGAME-26MAR02BOSMIL-BOS \
+curl https://surface.surf/api/v1/match/KXNBAGAME-26MAR07LACMEM-LAC \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
 ```json
 {
-  "source": {
-    "id": "KXNBAGAME-26MAR02BOSMIL-BOS",
-    "exchange": "kalshi",
-    "question": "Boston at Milwaukee Winner?",
-    "url": "https://kalshi.com/markets/kxnbagame/kxnbagame-26mar02bosmil-bos"
-  },
-  "match": {
-    "id": "98313749371896366519276790684273691434395213253249717099152745374401893722",
-    "exchange": "polymarket",
-    "question": "Celtics vs. Bucks",
-    "url": "https://polymarket.com/event/celtics-vs-bucks"
-  },
-  "confidence": 0.99
+  "contracts": [
+    {
+      "id": "KXNBAGAME-26MAR07LACMEM-LAC",
+      "parent_market_id": "KXNBAGAME-26MAR07LACMEM",
+      "exchange": "kalshi",
+      "question": "Los Angeles C at Memphis Winner?",
+      "yes_name": "Los Angeles C",
+      "no_name": "Memphis"
+    },
+    {
+      "id": "KXNBAGAME-26MAR07LACMEM-MEM",
+      "parent_market_id": "KXNBAGAME-26MAR07LACMEM",
+      "exchange": "kalshi",
+      "question": "Los Angeles C at Memphis Winner?",
+      "yes_name": "Memphis",
+      "no_name": "Los Angeles C"
+    },
+    {
+      "id": "nba-lac-mem-2026-03-07",
+      "parent_market_id": "nba-lac-mem-2026-03-07",
+      "exchange": "polymarket",
+      "question": "Clippers vs. Grizzlies",
+      "yes_name": "Clippers",
+      "no_name": "Grizzlies"
+    }
+  ],
+  "relationships": [
+    { "from": "KXNBAGAME-26MAR07LACMEM-LAC", "to": "nba-lac-mem-2026-03-07", "is_inverse": false },
+    { "from": "KXNBAGAME-26MAR07LACMEM-MEM", "to": "nba-lac-mem-2026-03-07", "is_inverse": true }
+  ]
 }
 ```
 

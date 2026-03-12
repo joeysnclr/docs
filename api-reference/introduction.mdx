@@ -3,7 +3,7 @@ title: "Introduction"
 description: "Cross-exchange prediction market data via a single API."
 ---
 
-The Surface API gives you programmatic access to Surface's cross-exchange matching system. Look up any Kalshi contract ticker or Polymarket token ID and get the matched contract on the other exchange, a confidence score, and direct links to both markets.
+The Surface API gives you programmatic access to Surface's cross-exchange matching system. Look up any Kalshi contract ticker or Polymarket contract ID and get the full cluster — every contract in the same cross-exchange group, their resolution rules, and the relationships between them.
 
 ## Base URL
 
@@ -16,7 +16,7 @@ https://surface.surf/api/v1
 All requests require an API key in the `X-API-Key` header.
 
 ```bash
-curl https://surface.surf/api/v1/match/KXNBAGAME-26FEB28LACLAL-LAL \
+curl https://surface.surf/api/v1/match/KXNBAGAME-26MAR07LACMEM-LAC \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
@@ -24,9 +24,9 @@ To get a key, reach out at [surface.surf](https://surface.surf).
 
 ## Rate limits
 
-The free tier allows **25 new unique contract lookups per day**.
+The free tier allows **25 new unique cluster lookups per day**.
 
-**Repeat lookups are always free.** Looking up the same `contractID` again — with the same key — never counts against your quota.
+**Repeat lookups are always free.** Looking up any contract ID within a cluster you've already accessed never counts against your quota.
 
 **404s are also free.** If no match is found for a contract, that request does not consume a quota slot.
 
@@ -34,7 +34,7 @@ Quota resets at **midnight UTC** each day. Two response headers are present on e
 
 | Header | Description |
 |---|---|
-| `X-Match-Limit-Remaining` | New unique matches remaining today |
+| `X-Match-Limit-Remaining` | New unique cluster lookups remaining today |
 | `X-Match-Limit-Reset` | RFC3339 UTC timestamp of the next reset |
 
 ## Errors
