@@ -2,3 +2,10 @@
 title: "Match a contract"
 openapi: "GET /match/{contractID}"
 ---
+
+<ParamField path="contractID" type="string" required>
+  Any Kalshi contract ticker or Polymarket contract slug.
+
+  - **Kalshi** — the `ticker` field from [`GET /markets`](https://docs.kalshi.com/api-reference/market/get-markets) (e.g. `KXNBAGAME-26MAR07LACMEM-LAC`)
+  - **Polymarket** — the `slug` field from [`GET /markets`](https://docs.polymarket.com/api-reference/markets/list-markets) on the Gamma API (e.g. `nba-lac-mem-2026-03-07`)
+</ParamField>
