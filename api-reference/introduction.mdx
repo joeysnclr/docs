@@ -5,6 +5,8 @@ description: "Cross-exchange prediction market data via a single API."
 
 The Surface API gives you programmatic access to Surface's cross-exchange matching system. Look up any Kalshi contract ticker or Polymarket contract ID and get the full cluster — every contract in the same cross-exchange group, their resolution rules, and the relationships between them.
 
+Every match passes through a multi-stage validation pipeline. Team, date, line, and side alignment are all checked before a result is accepted. If a candidate doesn't clear the bar, it's rejected rather than returned.
+
 ## Base URL
 
 ```
@@ -63,6 +65,6 @@ On a `429`, three additional fields are included:
 | Status | `error` code | When |
 |---|---|---|
 | `401` | `unauthorized` | Missing, invalid, or revoked API key |
-| `404` | `no_match` | No cross-exchange match found |
+| `404` | `no_match` | No match found — contract may not yet be in the dataset |
 | `429` | `daily_limit_reached` | Free tier quota exhausted |
 | `500` | `internal_error` | Unexpected server error |

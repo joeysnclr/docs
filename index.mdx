@@ -18,7 +18,7 @@ One endpoint. Works in any direction.
 
 ## How it works
 
-Surface maintains a continuously updated dataset of matched contracts across Kalshi and Polymarket. Each match is scored by an LLM-powered matching engine and human-verified before being returned.
+Surface maintains a continuously updated dataset of matched contracts across Kalshi and Polymarket. Every match passes through a multi-stage pipeline that checks team, date, line, and side alignment — mismatches are blocked, not returned.
 
 When you call `/match/{contractID}`, Surface resolves the input and returns the full cluster: all contracts in the same cross-exchange group and the relationships between them. The response is identical regardless of which contract ID you query.
 

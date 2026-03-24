@@ -81,7 +81,7 @@ console.log(data);
 
 `contracts` contains every contract in the cross-exchange group — all Kalshi contracts for the same event plus the Polymarket contract they map to. `relationships` describes the directed mapping from each Kalshi contract to the Polymarket contract, including whether the YES/NO sides are inverted.
 
-All matches are human-verified before being returned.
+Surface validates team, date, and side alignment before accepting a match. If something doesn't check out, it's blocked — you won't receive a partial or uncertain result.
 
 ## It works in both directions
 
