@@ -23,7 +23,7 @@ Surface maintains a continuously updated dataset of matched contracts across Kal
 When you call `/match/{contractID}`, Surface resolves the input and returns the full cluster: all contracts in the same cross-exchange group and the relationships between them. The response is identical regardless of which contract ID you query.
 
 ```bash
-curl https://surface.surf/api/v1/match/KXNBAGAME-26MAR07LACMEM-LAC \
+curl https://surface.surf/api/v1/match/KXMLBGAME-26MAR252005NYYSF-SF \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
@@ -31,33 +31,33 @@ curl https://surface.surf/api/v1/match/KXNBAGAME-26MAR07LACMEM-LAC \
 {
   "contracts": [
     {
-      "id": "KXNBAGAME-26MAR07LACMEM-LAC",
-      "parent_market_id": "KXNBAGAME-26MAR07LACMEM",
+      "id": "KXMLBGAME-26MAR252005NYYSF-SF",
+      "parent_market_id": "KXMLBGAME-26MAR252005NYYSF",
       "exchange": "kalshi",
-      "question": "Los Angeles C at Memphis Winner?",
-      "yes_name": "Los Angeles C",
-      "no_name": "Memphis"
+      "question": "New York Y vs San Francisco Winner?",
+      "yes_name": "San Francisco",
+      "no_name": "NO: San Francisco"
     },
     {
-      "id": "KXNBAGAME-26MAR07LACMEM-MEM",
-      "parent_market_id": "KXNBAGAME-26MAR07LACMEM",
-      "exchange": "kalshi",
-      "question": "Los Angeles C at Memphis Winner?",
-      "yes_name": "Memphis",
-      "no_name": "Los Angeles C"
-    },
-    {
-      "id": "nba-lac-mem-2026-03-07",
-      "parent_market_id": "nba-lac-mem-2026-03-07",
+      "id": "mlb-nyy-sf-2026-03-25",
+      "parent_market_id": "mlb-nyy-sf-2026-03-25",
       "exchange": "polymarket",
-      "question": "Clippers vs. Grizzlies",
-      "yes_name": "Clippers",
-      "no_name": "Grizzlies"
+      "question": "New York Yankees vs. San Francisco Giants",
+      "yes_name": "New York Yankees",
+      "no_name": "San Francisco Giants"
+    },
+    {
+      "id": "KXMLBGAME-26MAR252005NYYSF-NYY",
+      "parent_market_id": "KXMLBGAME-26MAR252005NYYSF",
+      "exchange": "kalshi",
+      "question": "New York Y vs San Francisco Winner?",
+      "yes_name": "New York Y",
+      "no_name": "NO: New York Y"
     }
   ],
   "relationships": [
-    { "from": "KXNBAGAME-26MAR07LACMEM-LAC", "to": "nba-lac-mem-2026-03-07", "is_inverse": false },
-    { "from": "KXNBAGAME-26MAR07LACMEM-MEM", "to": "nba-lac-mem-2026-03-07", "is_inverse": true }
+    { "from": "KXMLBGAME-26MAR252005NYYSF-SF", "to": "mlb-nyy-sf-2026-03-25", "is_inverse": false },
+    { "from": "KXMLBGAME-26MAR252005NYYSF-NYY", "to": "mlb-nyy-sf-2026-03-25", "is_inverse": true }
   ]
 }
 ```
@@ -66,4 +66,4 @@ curl https://surface.surf/api/v1/match/KXNBAGAME-26MAR07LACMEM-LAC \
 
 | Category | Markets |
 |---|---|
-| Sports | NBA, MLB, NHL, UFC, NCAAB, WBC |
+| Sports | MLB, WBC |

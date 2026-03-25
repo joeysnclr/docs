@@ -14,7 +14,7 @@ Pass your key in the `X-API-Key` header. You can look up any Kalshi ticker or Po
 <CodeGroup>
 
 ```bash cURL
-curl https://surface.surf/api/v1/match/KXNBAGAME-26MAR07LACMEM-LAC \
+curl https://surface.surf/api/v1/match/KXMLBGAME-26MAR252005NYYSF-SF \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
@@ -22,7 +22,7 @@ curl https://surface.surf/api/v1/match/KXNBAGAME-26MAR07LACMEM-LAC \
 import requests
 
 response = requests.get(
-    "https://surface.surf/api/v1/match/KXNBAGAME-26MAR07LACMEM-LAC",
+    "https://surface.surf/api/v1/match/KXMLBGAME-26MAR252005NYYSF-SF",
     headers={"X-API-Key": "YOUR_API_KEY"},
 )
 print(response.json())
@@ -30,7 +30,7 @@ print(response.json())
 
 ```javascript JavaScript
 const response = await fetch(
-  "https://surface.surf/api/v1/match/KXNBAGAME-26MAR07LACMEM-LAC",
+  "https://surface.surf/api/v1/match/KXMLBGAME-26MAR252005NYYSF-SF",
   { headers: { "X-API-Key": "YOUR_API_KEY" } }
 );
 const data = await response.json();
@@ -45,36 +45,36 @@ console.log(data);
 {
   "contracts": [
     {
-      "id": "KXNBAGAME-26MAR07LACMEM-LAC",
-      "parent_market_id": "KXNBAGAME-26MAR07LACMEM",
+      "id": "KXMLBGAME-26MAR252005NYYSF-SF",
+      "parent_market_id": "KXMLBGAME-26MAR252005NYYSF",
       "exchange": "kalshi",
-      "question": "Los Angeles C at Memphis Winner?",
-      "yes_name": "Los Angeles C",
-      "no_name": "Memphis",
-      "rules": "If Los Angeles C wins the game originally scheduled for Mar 7, 2026, this market resolves Yes."
+      "question": "New York Y vs San Francisco Winner?",
+      "yes_name": "San Francisco",
+      "no_name": "NO: San Francisco",
+      "rules": "If San Francisco wins the New York Y vs San Francisco professional baseball game originally scheduled for Mar 25, 2026 at 8:05 PM EDT, then the market resolves to Yes.\n\nThe following market refers to the New York Y vs San Francisco professional baseball game originally scheduled for Mar 25, 2026 at 8:05 PM EDT. If this game is postponed or delayed, the market will remain open and close after the rescheduled game has finished (within two days). If the game is cancelled or rescheduled to over two days away, the market will resolve to a fair price in accordance with the rules."
     },
     {
-      "id": "KXNBAGAME-26MAR07LACMEM-MEM",
-      "parent_market_id": "KXNBAGAME-26MAR07LACMEM",
-      "exchange": "kalshi",
-      "question": "Los Angeles C at Memphis Winner?",
-      "yes_name": "Memphis",
-      "no_name": "Los Angeles C",
-      "rules": "If Memphis wins the game originally scheduled for Mar 7, 2026, this market resolves Yes."
-    },
-    {
-      "id": "nba-lac-mem-2026-03-07",
-      "parent_market_id": "nba-lac-mem-2026-03-07",
+      "id": "mlb-nyy-sf-2026-03-25",
+      "parent_market_id": "mlb-nyy-sf-2026-03-25",
       "exchange": "polymarket",
-      "question": "Clippers vs. Grizzlies",
-      "yes_name": "Clippers",
-      "no_name": "Grizzlies",
-      "rules": "If the Clippers win, resolves Clippers. If the Grizzlies win, resolves Grizzlies."
+      "question": "New York Yankees vs. San Francisco Giants",
+      "yes_name": "New York Yankees",
+      "no_name": "San Francisco Giants",
+      "rules": "In the upcoming MLB game between the New York Yankees and San Francisco Giants, scheduled for March 25 at 8:05PM ET:\n\nThis market will resolve to \"New York Yankees\" if the New York Yankees win the game.\n\nThis market will resolve to \"San Francisco Giants\" if the San Francisco Giants win the game.\n\nIf the game is postponed, this market will remain open until the game has been completed. If the game is canceled entirely, with no make-up game, or ends in a tie, this market will resolve 50-50.\n\nThe primary resolution source for this market is the official final statistics of the event as recognized by the governing body or event organizers. However, if the governing body or event organizers have not published final match statistics within 24 hours after the event's conclusion, a consensus of credible reporting may be used instead."
+    },
+    {
+      "id": "KXMLBGAME-26MAR252005NYYSF-NYY",
+      "parent_market_id": "KXMLBGAME-26MAR252005NYYSF",
+      "exchange": "kalshi",
+      "question": "New York Y vs San Francisco Winner?",
+      "yes_name": "New York Y",
+      "no_name": "NO: New York Y",
+      "rules": "If New York Y wins the New York Y vs San Francisco professional baseball game originally scheduled for Mar 25, 2026 at 8:05 PM EDT, then the market resolves to Yes.\n\nThe following market refers to the New York Y vs San Francisco professional baseball game originally scheduled for Mar 25, 2026 at 8:05 PM EDT. If this game is postponed or delayed, the market will remain open and close after the rescheduled game has finished (within two days). If the game is cancelled or rescheduled to over two days away, the market will resolve to a fair price in accordance with the rules."
     }
   ],
   "relationships": [
-    { "from": "KXNBAGAME-26MAR07LACMEM-LAC", "to": "nba-lac-mem-2026-03-07", "is_inverse": false },
-    { "from": "KXNBAGAME-26MAR07LACMEM-MEM", "to": "nba-lac-mem-2026-03-07", "is_inverse": true }
+    { "from": "KXMLBGAME-26MAR252005NYYSF-SF", "to": "mlb-nyy-sf-2026-03-25", "is_inverse": false },
+    { "from": "KXMLBGAME-26MAR252005NYYSF-NYY", "to": "mlb-nyy-sf-2026-03-25", "is_inverse": true }
   ]
 }
 ```
@@ -88,13 +88,13 @@ Surface validates team, date, and side alignment before accepting a match. If so
 The response is identical regardless of which contract ID you query. Pass the Polymarket ID to get the same cluster:
 
 ```bash
-curl https://surface.surf/api/v1/match/nba-lac-mem-2026-03-07 \
+curl https://surface.surf/api/v1/match/mlb-nyy-sf-2026-03-25 \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
 ## Understanding `is_inverse`
 
-Sports games on Kalshi have two contracts — one for each team. One maps directly to Polymarket (`is_inverse: false`) and the other is the inverse side (`is_inverse: true`). When `is_inverse` is true, YES on that Kalshi contract is equivalent to NO on the Polymarket contract. Invert prices and sides accordingly.
+Sports games on Kalshi have two contracts — one for each team. One maps directly to Polymarket (`is_inverse: false`) and the other is the inverse side (`is_inverse: true`). When `is_inverse` is true, YES on that Kalshi contract is equivalent to NO on the Polymarket contract. In this example, `KXMLBGAME-26MAR252005NYYSF-NYY` (Yankees YES) is inverse to the Polymarket contract where Yankees YES is also the direct side. Invert prices and sides accordingly.
 
 ## Check your quota
 
